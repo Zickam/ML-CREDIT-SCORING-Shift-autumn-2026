@@ -1,40 +1,42 @@
-# Credit scoring
+# Кредитный скоринг
 
-**15th place out of 228 submissions. ROC AUC 0.8311 on the organizers' undisclosed test set.**
+[English version](README.en.md)
 
-My solution for the Shift credit scoring competition. The task was to rank loan applications by the risk of serious delinquency within 90 days of issuing a loan.
+**15 место среди 228 решений. ROC AUC 0.8311 на закрытой тестовой выборке организаторов.**
 
-![Leaderboard with suleymanov_a highlighted in 15th place](assets/leaderboard.png)
+Моё решение конкурса по кредитному скорингу от Shift. Задача состояла в том, чтобы ранжировать заявки на займ по риску серьёзной просрочки в течение 90 дней после выдачи займа.
 
-My account is `suleymanov_a`, submission ID `876813`. Other participants' names are blurred and my row is highlighted. The screenshot shows the rank and score.
+![Таблица лидеров с выделенной строкой suleymanov_a на 15 месте](assets/leaderboard.png)
 
-## Data and preparation
+Мой аккаунт на платформе `suleymanov_a`, ID решения `876813`. Имена остальных участников размыты, моя строка выделена. На скриншоте видны место и результат.
 
-The organizers provided applications in `train.csv` and `test.csv`, plus three tables with transactions, credit bureau records and previous loans. After removing 8 duplicate training rows, there were 6480 labeled applications and 2520 test applications. About 34 percent of the training applications had the positive target.
+## Данные и подготовка
 
-I checked missing values, class balance, distributions and the coverage of the history tables. Three columns were completely empty in test, including two that describe events after the loan was issued. I removed them from the model. Using information that would only become available after making a prediction is data leakage: it can make validation look better than the model really is.
+Организаторы предоставили заявки в `train.csv` и `test.csv`, а также три таблицы с транзакциями, данными кредитного бюро и прошлыми займами. После удаления 8 дубликатов осталось 6480 заявок с известным ответом и 2520 тестовых заявок. Примерно у 34 процентов заявок в обучающей выборке целевой признак равен 1.
 
-The history tables contain several records per client or application. I reduced them to one row using counts, sums, averages and maximums, then joined them to the applications. Useful examples include the largest past delay, credit utilization, transaction variability and the share of gambling transactions. I also added ratios such as estimated monthly payment divided by income. This payment estimate does not include interest.
+Я проверил пропуски, баланс классов, распределения признаков и наличие истории у клиентов. Три столбца были полностью пустыми в test, причём два из них описывают события после выдачи займа. Я исключил их из модели. Использование сведений, которые появятся только после момента прогноза, приводит к утечке данных: на валидации модель может выглядеть лучше, чем будет работать на практике.
 
-## Models and validation
+В таблицах истории одному клиенту или заявке соответствует несколько записей. Я свёл их к одной строке с помощью количества записей, сумм, средних и максимумов, затем присоединил к заявкам. Среди признаков есть максимальная прошлая просрочка, доля использованного кредитного лимита, разброс сумм транзакций и доля операций в категории азартных игр. Также я добавил отношения величин, например расчётного ежемесячного платежа к доходу. В этой оценке платежа проценты по займу не учитываются.
 
-CatBoost uses 33 selected features. It builds decision trees one after another, with each new tree helping reduce the errors of the current model. It handles numerical missing values and categorical features without a separate one hot encoding step.
+## Модели и валидация
 
-The second model is logistic regression with 17 features. Splines let numerical features have smooth curved effects instead of only straight line effects. I used median imputation, scaling and one hot encoding inside a scikit learn pipeline, so these steps are fitted only on the training part of each fold.
+CatBoost использует 33 отобранных признака. Он последовательно строит деревья решений, каждое из которых помогает уменьшить ошибки текущей модели. CatBoost умеет работать с пропусками в числовых данных и категориальными признаками без отдельного кодирования категорий в набор бинарных столбцов.
 
-I used 8 stratified folds and repeated the split with three seeds. Stratification keeps the class balance similar across folds. Each out of fold prediction comes from a model that did not train on that row. Predictions for test are averaged across the fold models.
+Вторая модель представляет собой логистическую регрессию с 17 признаками. Сплайны позволяют описывать плавные нелинейные зависимости вместо одной прямой зависимости от каждого числового признака. Заполнение пропусков медианой, масштабирование и кодирование категорий собраны в pipeline scikit learn. Эти преобразования обучаются только на обучающей части каждого фолда.
 
-The final ensemble combines percentile ranks from both models. For example, a rank of 0.9 means an application is scored above roughly 90 percent of the sample. Combining ranks puts both models on a comparable scale. The blend weight is chosen from the middle of the near best range of validation scores.
+Я использовал 8 стратифицированных фолдов и повторил разбиение с тремя значениями seed. Стратификация сохраняет примерно одинаковый баланс классов в разных фолдах. Каждый прогноз out of fold, или OOF, получен моделью, которая не обучалась на этой строке. Прогнозы для test усредняются по моделям из всех фолдов.
 
-ROC AUC measures how well the model ranks positive cases above negative ones. A random ranking scores around 0.5 and a perfect ranking scores 1. The submitted values are ranking scores, not calibrated probabilities of delinquency.
+Итоговый ансамбль объединяет процентильные ранги двух моделей. Например, ранг 0.9 означает, что заявка получила оценку выше примерно 90 процентов объектов выборки. Так прогнозы обеих моделей приводятся к сопоставимой шкале. Вес смеси выбирается из середины диапазона весов, дающих результат на валидации, близкий к лучшему.
 
-On local out of fold validation, CatBoost scored 0.83999, spline logistic regression scored 0.84221 and the ensemble scored 0.84345. The selected weights were 0.325 for CatBoost and 0.675 for the spline model. These are separate from the official test score of 0.8311.
+ROC AUC показывает, насколько хорошо модель ставит случаи с просрочкой выше случаев без неё. Случайное ранжирование даёт результат около 0.5, идеальное ранжирование даёт 1. Значения в отправленном файле являются оценками для ранжирования, а не откалиброванными вероятностями просрочки.
 
-Repeating folds checks sensitivity to the split, but it reuses the same labeled data. Feature and blend selection can make local validation optimistic. A future lending model would also need validation on later applications and probability calibration.
+На локальной OOF валидации CatBoost получил 0.83999, логистическая регрессия со сплайнами получила 0.84221, а ансамбль получил 0.84345. Выбранные веса составили 0.325 для CatBoost и 0.675 для модели со сплайнами. Это локальные результаты, их нужно отличать от официального результата 0.8311 на тестовой выборке.
 
-## Run the notebook
+Повторение разбиений помогает проверить чувствительность к выбору фолдов, но использует те же размеченные данные. Подбор признаков и весов ансамбля может завышать локальную оценку. Для применения в реальном кредитовании также потребовались бы проверка на более поздних заявках и калибровка вероятностей.
 
-The solution was checked on Linux with Python 3.12.13. Download the five CSV files from the [organizers' data folder](https://drive.google.com/drive/folders/1P67wVcY0-u2jvhcMT82v1gb4hpxCXMu2?usp=sharing) and put them in a local `data` folder beside the notebook. The raw data is not included in Git.
+## Как запустить
+
+Решение проверено на Linux с Python 3.12.13. Скачайте пять CSV файлов из [папки организаторов](https://drive.google.com/drive/folders/1P67wVcY0-u2jvhcMT82v1gb4hpxCXMu2?usp=sharing) и поместите их в папку `data` рядом с ноутбуком. Исходные данные не включены в Git.
 
 ```bash
 python3.12 -m venv .venv
@@ -43,12 +45,12 @@ python -m pip install -r requirements.txt
 jupyter notebook competition.ipynb
 ```
 
-Run the cells from top to bottom. The notebook covers EDA, feature preparation, validation, training and CSV export. The final settings are fixed, so running it does not start a new parameter search.
+Выполните ячейки сверху вниз. Ноутбук содержит исследование данных, подготовку признаков, валидацию, обучение и сохранение CSV. Итоговые настройки зафиксированы, поэтому новый поиск параметров при запуске не начинается.
 
-`submission.csv` is the unchanged file from the submitted archive. The verified run reproduced it byte for byte. A new run writes `outputs/submission.csv` and compares its IDs and scores with the original. Small numerical differences are possible with a different platform or library versions.
+`submission.csv` сохранён без изменений из отправленного архива. Проверочный запуск воспроизвёл его байт в байт. Новый запуск записывает `outputs/submission.csv` и сравнивает идентификаторы и прогнозы с оригиналом. На другой платформе или с другими версиями библиотек возможны небольшие численные различия.
 
-## Files
+## Файлы
 
-[competition.ipynb](competition.ipynb) contains the complete solution and saved results. [submission.csv](submission.csv) contains the 2520 submitted predictions. [requirements.txt](requirements.txt) lists the environment dependencies. The `assets` folder contains the edited leaderboard.
+[competition.ipynb](competition.ipynb) содержит полное решение и сохранённые результаты. В [submission.csv](submission.csv) находятся 2520 отправленных прогнозов. В [requirements.txt](requirements.txt) перечислены зависимости окружения. В папке `assets` находится отредактированная таблица лидеров.
 
-The attached archive matched the local `submission_0.8311.zip` byte for byte. Its notebook had been saved during a subsequent Optuna run, so the final model settings were recovered from the saved experiment study and checked by rerunning the solution. Old experiments, the study database and duplicate archives are excluded from this repository.
+Приложенный архив совпал байт в байт с локальным `submission_0.8311.zip`. Ноутбук в нём был сохранён во время следующего запуска Optuna, поэтому итоговые параметры модели восстановлены из сохранённой истории экспериментов и проверены повторным запуском решения. Старые эксперименты, база поиска параметров и дубликаты архивов исключены из репозитория.
