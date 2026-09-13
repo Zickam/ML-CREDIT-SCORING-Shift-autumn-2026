@@ -4,6 +4,8 @@
 
 **15th place in a competition with 228 participants and 1331 submissions. ROC AUC 0.8311 on the organizers' undisclosed test set.**
 
+The highest ROC AUC in the supplied leaderboard is 0.8346. My score is just 0.0035 lower, a gap of 0.35 percentage points. The relative gap is about 0.42 percent of the best score, less than one percent.
+
 This solution earned me an invitation to the next selection stage, a video interview.
 
 My solution for the Shift credit scoring competition. The task was to rank loan applications by the risk of serious delinquency within 90 days of issuing a loan.
