@@ -1,0 +1,11 @@
+data/
+outputs/
+.venv/
+.ipynb_checkpoints/
+__pycache__/
+*.pyc
+*.db
+*.zip
+catboost_info/
+.env
+.DS_Store
