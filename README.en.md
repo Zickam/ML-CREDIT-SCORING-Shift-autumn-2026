@@ -51,6 +51,4 @@ Run the cells from top to bottom. The notebook covers EDA, feature preparation, 
 
 ## Files
 
-[competition.ipynb](competition.ipynb) contains the complete solution and saved results. [submission.csv](submission.csv) contains the 2520 submitted predictions. [requirements.txt](requirements.txt) lists the environment dependencies. The `assets` folder contains the edited leaderboard.
-
-The attached archive matched the local `submission_0.8311.zip` byte for byte. Its notebook had been saved during a subsequent Optuna run, so the final model settings were recovered from the saved experiment study and checked by rerunning the solution. Old experiments, the study database and duplicate archives are excluded from this repository.
+[competition.ipynb](competition.ipynb) contains the complete solution and saved results. [submission.csv](submission.csv) contains the 2520 submitted predictions. [requirements.txt](requirements.txt) lists the environment dependencies.
