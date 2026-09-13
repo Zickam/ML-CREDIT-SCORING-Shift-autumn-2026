@@ -2,7 +2,9 @@
 
 [Русская версия](README.md)
 
-**15th place out of 228 submissions. ROC AUC 0.8311 on the organizers' undisclosed test set.**
+**15th place out of 1331 submissions. ROC AUC 0.8311 on the organizers' undisclosed test set.**
+
+This solution earned me an invitation to the next selection stage, a video interview.
 
 My solution for the Shift credit scoring competition. The task was to rank loan applications by the risk of serious delinquency within 90 days of issuing a loan.
 
