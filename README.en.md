@@ -2,7 +2,7 @@
 
 [Русская версия](README.md)
 
-**15th place out of 1331 submissions. ROC AUC 0.8311 on the organizers' undisclosed test set.**
+**15th place in a competition with 228 participants and 1331 submissions. ROC AUC 0.8311 on the organizers' undisclosed test set.**
 
 This solution earned me an invitation to the next selection stage, a video interview.
 
